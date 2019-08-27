@@ -56,8 +56,6 @@ The idea behind the `pubsub.asyncIterator` method is that it returns an [`Iterat
 
 As mentioned at the beginning of this article, there needs to be an open connection between the client and the server so live updates can happen. There are serveral methods for doing so, but the 2 most popular ones are:
 
-
-
 *   Based on polling with HTTP protocol
 *   Based on web-sockets (WS protocol)
 
@@ -100,23 +98,19 @@ Now we will create the service under the path `services/cache.service.ts`.
 Like any other GraphQL operation, `@apollo/react-hooks` provides us with a dedicated React hook for subscriptions called `useSubscription`. 
 
 Given the subscription document and the `onSubscriptionData` callback we can handle incoming changes. 
-We will be using GraphQL Code Generator to generate typed subscription hooks, as the `typescript-react-apollo` plug-in supports it right out of the box. 
+We will be using GraphQL Code Generator to generate typed subscription hooks, as the `typescript-react-apollo` plug-in supports it right out of the box.
 
-First let's update the `codegen.yml` file to look for documents in the `graphql/subscriptions` dir:
+So let's run the code generation command:
 
-{{{ diffStep 10.3 module="client" }}}
-
-And then we will type the code generation command:
-
-    $ npm run codegen
+    $ yarn codegen
 
 Now we can import and use the newly generated hook `useMessageAddedSubscription` in the `cache.service`. Like mentioned earlier, we will be using the `onSubscriptionData` callback to retrieve the change that was sent by the server and we will use it to re-write our cache. In this case we will be writing a new fragment for the incoming message, and we will update the correlated chat:
 
-{{{ diffStep 10.4 module="client" files="cache.service" }}}
+{{{ diffStep 10.3 module="client" files="cache.service" }}}
 
 We will also use the exported `writeMessage()` function in the `ChatRoomScreen` so we won't have any code duplications:
 
-{{{ diffStep 10.4 module="client" files="ChatRoom" }}}
+{{{ diffStep 10.3 module="client" files="ChatRoom" }}}
 
 One thing missing that you might notice is that we're trying to retrieve the chat from the received message, unfortunately our GraphQL schema doesn't support it and we will need to add it. On the server, we will add a `chat` field to the `Message` type in the GraphQL schema, and we will implement a resolver which will lookup for the chat in the chats collection:
 
@@ -124,11 +118,11 @@ One thing missing that you might notice is that we're trying to retrieve the cha
 
 Now that we have it supported we can update the `Message` fragment in the client to include that information. We don't need the entire chat, only its ID, since the fragment ID composition is done out of an ID and type name:
 
-{{{ diffStep 10.5 module="client" }}}
+{{{ diffStep 10.4 module="client" }}}
 
 Finally, we will import the `useCacheService` React hook that we've just created and we will use it in our main `App` component. This means that the cache service will start listening for changes right as the app component is mounted:
 
-{{{ diffStep 10.6 module="client" }}}
+{{{ diffStep 10.5 module="client" }}}
 
 Subscription handling is complete! If you'll try to repeat the same process again where you check messages updating between 2 instances of the app, you should see them both update.
 

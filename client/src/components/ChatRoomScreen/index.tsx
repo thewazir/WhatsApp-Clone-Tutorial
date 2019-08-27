@@ -142,8 +142,10 @@ const [addMessage] = useAddMessageMutation();
             content,
           },
         },
-        update: (client, { data: { addMessage } }) => {
-          writeMessage(client, addMessage);
+        update: (client, { data }) => {
+          if (data && data.addMessage) {
+            writeMessage(client, data.addMessage);
+          }
         },
       });
     },

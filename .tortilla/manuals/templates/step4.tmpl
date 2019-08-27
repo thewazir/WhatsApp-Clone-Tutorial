@@ -6,7 +6,8 @@ It allows clients to define the structure of the data required, and the exact sa
 therefore preventing excessively large amounts of data from being returned. 
 Unlike REST, GraphQL APIs are organized in terms of types and fields, not endpoints.
 
-Even if we use GraphQL without a server, it can save us a lot of code and work becuase it can transform data in a very easy way from a schema to a query.
+Even if we use GraphQL without a server, 
+it can save us a lot of code and work because it can transform data in a very easy way from a schema to a query.
 
 Currently in our app, if we'd like to get its chats we would send a GET request to `/chats`. 
 With GraphQL it would be done differently with a string that describes the data that we would like to get:
@@ -91,7 +92,7 @@ chats {
 }
 ```
 
-We think it’s pretty straightforward to understand what do you fetch by just looking at the query above.
+We think it’s pretty straightforward to understand what you fetch by just looking at the query above.
 
 ![graphql-request](https://user-images.githubusercontent.com/7648874/54133620-5aec8300-4451-11e9-9bda-a459dc48f57c.png)
 
@@ -122,28 +123,14 @@ Things will be much clearer as we move further.
 
 Let's try to describe our app's data with a GraphQL schema and then dive into it:
 
-```graphql
-scalar Date
+{{{ diffStep "2.2" module="server" files="schema/typeDefs.graphql" }}}
 
-type Message {
-  id: ID!
-  content: String!
-  createdAt: Date!
-}
+The schema is self explanatory in terms of what data it's compatible with. 
 
-type Chat {
-  id: ID!
-  name: String!
-  picture: String
-  lastMessage: Message
-}
+To define a concrete data without any inner schema definition, scalars are used in GraphQL. 
+For example; `Int`, `Float`, `Date`, `URL` and `EmailAddress`.
 
-type Query {
-  chats: [Chat!]!
-}
-```
-
-The schema is self explanatory in terms of what data it's compatible with. Supported built-in scalar types in GraphQL are:
+The supported built-in scalar types in GraphQL are mostly primitive types:
 
 - Int: Signed 32‐bit integer
 - Float: Signed double-precision floating-point value
@@ -152,7 +139,18 @@ The schema is self explanatory in terms of what data it's compatible with. Suppo
 - ID (serialized as String): A unique identifier, often used to refetch an object or as the key for a cache. 
 While serialized as a String, ID signifies that it is not intended to be human‐readable
 
+### Custom Scalars
+
 Any custom scalar can be declared with the `scalar` keyword, and custom types can be declared with the `type` keyword. 
+Scalars have their own internal validation, parsing and serialization logics. 
+
+For example, you can have a custom scalar type `DateTime`. 
+Due to JSON format restrictions, date objects are passed in string timestamp format or a number in milliseconds.
+Instead of having parsing, serialization and validation logic in our business logic, we can define a `DateTime` scalar and put everything on it. 
+So, we will have parsed native JavaScript `Date` object in our business logic while it is transferred as string or number like before.
+
+ ***[You can read more about them in that blog post](https://medium.com/the-guild/graphql-scalars-1-0-is-out-more-types-data-integrity-and-strict-validations-on-graphql-972079428fb)***
+
 However, you should know that some types are reserved by GraphQL itself; `Query` is one of them. 
 The `Query` type will be used as the root for received queries by the clients, which means that we can send queries which start with the `chats` field. 
 Other reserved types are:
@@ -209,10 +207,12 @@ Now we will implement the resolvers. Resolvers are presented in a JSON object wh
 
 For now it's extremely simple, we map the chats query directly into the database collection. Each field in the resolvers object should match the GraphQL type it represents in the schema. Since we don't have any logic now, we should not implement any resolvers for the rest of the types, the data will simply be forwarded as is.
 
-Note that we've implemented a custom scalar named `Date` and we resolved it with an NPM package. Let's install it:
+Note that we've implemented a custom scalar named `Date` and `URL` but we will need an implementation for it. 
+We will use [`graphql-scalars`](https://github.com/urigo/graphql-scalars) that has many custom scalars ready-to-use.
 
-    $ yarn add graphql-iso-date
-    $ yarn add --dev @types/graphql-iso-date
+Let's install it:
+
+    $ yarn add graphql-scalars
 
 Final thing that we have to do would be combining the resolvers and the type-defs under a single GraphQL schema.
 
@@ -271,7 +271,7 @@ So getting back to the client, all we have to do is to change the fetching URL i
 The received data should be similar to the previous one. 
 No further changes are required. 
 
-In the next chapter, we will continue working on the UI of our front-end application and we will add a new screen to the flow - the `ChatRoomScreen`.
+In the next chapter, we will learn how to test the React.Components in the client, and Apollo-GraphQL resolvers in the server.
 
 -------
 TODO: Start with calling the  `graphql` function just on the server to show how it works.
